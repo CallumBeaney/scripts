@@ -1,0 +1,15 @@
+name: howold
+description: Tells you how old someone is based on their DOB (DMY)
+version: 1.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  intl: ^0.17.0 # for 
+  number_to_words_chinese: ^0.0.1
+
+environment:
+  sdk: '^2.19.6'
+
+dev_dependencies:
+  # Add your project's dev dependencies here
