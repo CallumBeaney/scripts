@@ -1,7 +1,9 @@
--- COMPILE TO EXEC: 	osacompile -o bw bw.scpt
--- RUN SCRIPT FILE: 	osascript bw.scpt
--- ADD TO PATH: 			export PATH="/filepath/bw.scpt:$PATH"
--- ALIAS:							alias bw='osascript /filepath/bw.scpt'									
+-- For MacOS Monterey 12.6.6
+
+-- COMPILE TO EXEC:	osacompile -o bw bw.scpt
+-- RUN SCRIPT FILE:	osascript bw.scpt
+-- ADD TO PATH:	export PATH="/filepath/bw.scpt:$PATH"
+-- ALIAS:	alias bw='osascript /filepath/bw.scpt'									
 
 -- My thanks to & debug assist from  VikingOSX (https://discussions.apple.com/profile/VikingOSX/participation)
 

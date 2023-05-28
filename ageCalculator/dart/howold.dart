@@ -26,5 +26,5 @@ void main(List<String> args) {
   String years = NumberToWordsChinese.convert(difference.inDays ~/ 365); // crude but sufficient
   String months = NumberToWordsChinese.convert((difference.inDays % 365) ~/ 30); // likewise
 
-  print("\n　${years}　歲、${months}　個月。\n");
+  print("\n\t${years}\t歲\n\t${months}\t個月。\n");
 }

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAXCHARS 500000 // about 0.5MB of space
+#define MAXCHARS 1000000
 
 int checkOS(void);
 char *getClipboardContent(int);
