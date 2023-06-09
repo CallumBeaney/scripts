@@ -1,0 +1,17 @@
+name: newsChecker
+description: checks news for some long-term projects I want to be reminded about
+version: 1.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  hackernews_api: ^0.0.6
+  news_api_flutter_package: ^1.1.0
+  colorize: any
+  intl: ^0.18.1
+
+environment:
+  sdk: '^2.19.6'
+
+dev_dependencies:
+  # Add your project's dev dependencies here

@@ -1,15 +1,75 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/model/error.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:hackernews_api/hackernews_api.dart';
+import 'package:colorize/colorize.dart';
+
+/// This is essentially my attempt at making my own ultra-minimal old RSS-style terminal news program.
 
 // Future<List<Source>> _sources = _newsAPI.getSources();
 // https://newsapi.org/v2/sources?x=y&apiKey=34984eeaaece433c812780af807e3dda
 
+List<String> _techBlacklist = [
+  'ChatGPT',
+  'GPT',
+  'AI',
+  'Apple',
+  'Amazon',
+  'openAI',
+  'Twitter',
+  'Musk',
+  'iOS',
+];
+List<String> _newsBlacklist = [
+  'shooting',
+  'trump',
+  'prince harry',
+  'markle',
+  'king charles',
+  'piers morgan',
+  'boris johnson',
+  'football',
+  'sports',
+  'mogg',
+  'primaries',
+  'royal family',
+  'musk',
+  'twitter',
+  '<a',
+  'Kardashian',
+  'kanye',
+];
+List<String> _techPromoteList = [
+  'tool',
+  'Dart',
+  'Flutter',
+  'ASM',
+  'ANSI',
+  'ISO',
+  " C ",
+  'Cambridge',
+  'Raspberry Pi',
+  'China',
+  'Japan',
+  'UK',
+  'France',
+];
+List<String> _newsPromoteList = [
+  'Cambridge',
+  'inflation',
+  'China',
+  'Japan',
+  'UK',
+  'France',
+  'Colonies',
+];
+
 void main() async {
   clearTerminal();
-  stdout.write('1. Hacker News\n2. Generic Tech News\n3. 日本ニュース\n4. 中国新闻\n');
+  stdout.write('1. Hacker News\n2. Generic News\n3. 日本ニュース\n4. 中国新闻\n');
 
   int? userChoice = null;
   while (userChoice == null || (userChoice > 4 || userChoice < 1)) {
@@ -17,28 +77,28 @@ void main() async {
     userChoice = int.parse(stdin.readLineSync()!);
   }
 
-  print('if');
   if (userChoice == 1) {
     clearTerminal();
     int? storyType = null;
-    stdout.write('1. Top Stories\n2. New Stories\n3. "Ask" Stories\n4. Job Stories\n');
+    stdout.write('1. Top Stories\n2. New Stories\n3. Ask Stories\n4. Job Stories\n');
     while (storyType == null || (storyType > 4 || storyType < 1)) {
       stdout.write('\nChoice: ');
       storyType = int.parse(stdin.readLineSync()!);
     }
-    hackerNews(storyType);
+    getHackerNews(storyType);
   } else if (userChoice == 2) {
+    newsAPI();
   } else if (userChoice == 3) {
   } else if (userChoice == 4) {
   } else {}
 }
 
-void hackerNews(int choice) async {
-  // Disable standard input echoing
-  stdin.echoMode = false;
+void getHackerNews(int choice) async {
+  // // Disable standard input echoing
+  // stdin.echoMode = false;
 
-  // Disable standard input line mode
-  stdin.lineMode = false;
+  // // Disable standard input line mode
+  // stdin.lineMode = false;
 
   HackerNews news = HackerNews(
     newsType: (() {
@@ -53,26 +113,69 @@ void hackerNews(int choice) async {
           return NewsType.jobStories;
         default:
           throw Exception(
-              'ERROR: Invalid parameter "choice" erroneously passed to HackerNews constructor. Please raise an issue on Github.');
+              'ERROR: Invalid parameter "choice" erroneously passed to HackerNews constructor.');
       }
     })(),
   );
 
-  List<Story> stories = await news.getStories();
+  // List<Story> stories = await news.getStories();
 
-  if (stories.isEmpty) {
-    stdout.writeln(
-        'ERROR: Failed to fetch news article data. This may due to connectivity problems or API gateway issues.');
+  Duration timeoutDuration = Duration(seconds: 10);
+  Future<List<Story>> storiesFuture = news.getStories();
+
+  List<Story>? stories;
+  bool hasTimedOut = false;
+
+  await Future.any([
+    storiesFuture.then((value) => stories = value),
+    Future.delayed(timeoutDuration).then((_) => hasTimedOut = true),
+  ]);
+
+  if (hasTimedOut) {
+    stdout.writeln('ERROR: Timeout occurred while fetching news article data.');
     exit(1);
   }
+  if (stories == null || stories!.isEmpty) {
+    stdout.writeln(
+        'ERROR: Failed to fetch news article data. This may be due to connectivity problems or API gateway issues.');
+    return;
+  }
 
-  // clearTerminal();
+  clearTerminal();
 
-  for (Story story in stories.reversed) {
-    print(story.title);
-    print(story.url);
+  stories!.sort((a, b) => a.score.compareTo(b.score));
+  // List<Story> reversedSublist = stories!.reversed.toList().sublist(0, 20);
+
+  for (Story story in stories!.reversed) {
+    if (story.dead == true || story.url == 'null' || story.deleted == true) {
+      continue;
+    }
+    if (_techBlacklist.any((e) => story.title.toLowerCase().contains(e.toLowerCase()))) {
+      continue;
+    }
+
+    // String timestamp = DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(story.time * 1000));
+    int daysCounter =
+        DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(story.time * 1000)).inDays;
+
+    String when = daysCounter == 0
+        ? "today"
+        : daysCounter == 1
+            ? "yesterday"
+            : "more than a day ago";
+
+    if (_techPromoteList.any((e) => story.title.toLowerCase().contains(e.toLowerCase()))) {
+      printYellow('－');
+      stdout.write(' ${story.title} ');
+    } else {
+      stdout.write('－ ${story.title} ');
+    }
+
+    stdout.write('\nby ${story.by} $when with ${story.score} points\n');
+    stdout.write(story.url);
+
     // printClickableLink('READ', story.url);
-    print('\n');
+    stdout.write('\n\n');
   }
 
   // autoScrollUpwards();
@@ -85,59 +188,66 @@ void newsAPI() async {
   DateTime oneWeekAgo = now.subtract(oneWeek);
 
   // Future<List<Source>> _sources = _newsAPI.getSources();
-  // print(_sources);
+  // stdout.write(_sources);
 
-  List<Article>? engTechArticles;
-  List<Article>? ftzTechArticles;
+  List<Article>? articleList;
 
   try {
-    // List<Article> chineseTechArticles = await _newsAPI.getTopHeadlines(
-    //   category: 'technology',
-    //   country: 'cn',
-    //   // query: '-AI',
-    //   pageSize: 8,
-    // );
-
-    // List<Article> japaneseTechArticles = await _newsAPI.getTopHeadlines(
-    //   category: 'technology',
-    //   country: 'jp',
-    //   // query: '-AI',
-    //   pageSize: 3,
-    // );
-
-    // List<Article> articleList = await _newsAPI.getEverything(
-    //   sources: 'bbc-news,',
-    //   from: oneWeekAgo,
-    //   to: now,
-    // );
-    // ftzTechArticles = await _newsAPI.getTopHeadlines(
-    //   country: 'tw',
-    //   category: 'technology',
-    //   pageSize: 4,
-    // );
-
-    engTechArticles = await _newsAPI.getEverything(
-      sources: 'hacker-news',
-      query: '-apple -AI -gpt -twitter -fintech',
-      // sortBy: 'relevancy',
-      // from: oneWeekAgo,
-      // to: now,
+    articleList = await _newsAPI.getTopHeadlines(
+      sources: 'reuters,bbc-news' /* Can't mix with category */,
+      pageSize: 11,
     );
+
+    articleList += await _newsAPI.getEverything(
+      domains: 'apnews.com',
+      from: oneWeekAgo,
+      to: now,
+      pageSize: 11,
+    );
+    clearTerminal();
   } catch (e) {
     if (e is ApiError) {
-      print('ERROR: $e.message');
+      stdout.write('ERROR: $e.message');
     } else {
-      print('Unexpected error: $e');
+      stdout.write('Unexpected error: $e');
     }
   }
 
-  for (Article a in engTechArticles!) {
-    stdout.write('\n${a.title}\nBY: ${a.author}\n');
-    printClickableLink('READ\n', a.url!);
+  /// After here NewsAPI won't return null; it'll just return an empty List
+  if (articleList!.isEmpty) {
+    print(
+        'ERROR: Failed to fetch news article data. This may be due to connectivity problems or API gateway issues.');
+    exit(1);
+  }
+
+  articleList.shuffle();
+
+  for (Article a in articleList) {
+    // printClickableLink('READ\n', a.url!);
+    // if (_newsBlacklist.any((e) => a.title!.toLowerCase().contains(e.toLowerCase()))) {
+    //   continue;
+    // }
+
+    if (_newsPromoteList.any((e) => a.title!.toLowerCase().contains(e.toLowerCase()))) {
+      printCyan('－');
+      stdout.write(' ${a.title}\n');
+    } else {
+      stdout.write('－ ${a.title}\n');
+    }
+
+    String timestamp = DateFormat('yyyy-MM-dd').format(DateTime.parse(a.publishedAt!));
 
     if (a.description != null) {
-      stdout.write('INFO:\t${a.description}\n\n');
+      stdout.write('${a.description}\n');
     }
+
+    if (a.author != null) {
+      stdout.write('Published by ${a.author} on $timestamp\n');
+    } else {
+      stdout.write('Published on $timestamp\n');
+    }
+
+    stdout.write('${a.url}\n\n');
 
     // stdout.write(a.content);
 
@@ -161,9 +271,7 @@ void autoScrollUpwards() {
 }
 
 void clearTerminal() {
-  if (Platform.isMacOS) {
-    stdout.write('\x1B[2J\x1B[0;0H');
-  }
+  stdout.write(Process.runSync('clear', [], runInShell: true).stdout);
 }
 
 void briefPause() async {
@@ -172,5 +280,10 @@ void briefPause() async {
 
 void moveToPosition(int row, int column) {
   final positionCode = '\x1B[${row};${column}H';
-  print(positionCode);
+  stdout.write(positionCode);
 }
+
+void printCyan(String text) => stdout.write(Colorize(text).cyan());
+void printYellow(String text) => stdout.write(Colorize(text).yellow());
+void printMagenta(String text) => stdout.write(Colorize(text).lightMagenta());
+void printRed(String text) => stdout.write(Colorize(text).red());
