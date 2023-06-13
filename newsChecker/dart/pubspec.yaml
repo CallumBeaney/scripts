@@ -9,6 +9,7 @@ dependencies:
   news_api_flutter_package: ^1.1.0
   colorize: any
   intl: ^0.18.1
+  ipapi: ^1.0.2
 
 environment:
   sdk: '^2.19.6'

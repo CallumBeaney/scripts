@@ -62,8 +62,20 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "ipapi",
+      "rootUri": "file:///Users/beaneyc/.pub-cache/hosted/pub.dev/ipapi-1.0.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
+    },
+    {
       "name": "js",
       "rootUri": "file:///Users/beaneyc/.pub-cache/hosted/pub.dev/js-0.6.7",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
+    },
+    {
+      "name": "json_annotation",
+      "rootUri": "file:///Users/beaneyc/.pub-cache/hosted/pub.dev/json_annotation-4.8.1",
       "packageUri": "lib/",
       "languageVersion": "2.19"
     },
@@ -134,7 +146,7 @@
       "languageVersion": "2.19"
     }
   ],
-  "generated": "2023-06-08T16:17:44.061671Z",
+  "generated": "2023-06-12T16:10:37.509188Z",
   "generator": "pub",
   "generatorVersion": "3.0.2"
 }

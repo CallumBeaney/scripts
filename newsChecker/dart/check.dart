@@ -1,18 +1,20 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:hackernews_api/helper/exception.dart';
 import 'package:intl/intl.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/model/error.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
-import 'package:hackernews_api/hackernews_api.dart';
+import 'package:hackernews_api/hackernews_api.dart'; // https://pub.dev/packages/hackernews_api
 import 'package:colorize/colorize.dart';
+// import 'package:ipapi/ipapi.dart'; // This is a litte slow with a VPN on
 
 import 'keys.dart';
 
 /// This is essentially my attempt at making my own ultra-minimal old RSS-style terminal news program.
 
-// Future<List<Source>> _sources = _newsAPI.getSources();
-// https://newsapi.org/v2/sources?x=y&apiKey=34984eeaaece433c812780af807e3dda
+/// TODO: get webpage scraper from pub.dev: https://pub.dev/packages/web_scraper
+/// TODO: add submenus to 中国語と日本語なの
 
 void main() async {
   // stdin.echoMode = false;  /// Disable standard input echoing
@@ -20,6 +22,13 @@ void main() async {
 
   clearTerminal();
 
+  // final GeoData? currentLocation = await IpApi.getData();
+  // if (currentLocation?.countryCode == 'CN') {
+  //   validSites(mainlandSources);
+  //   exit(0);
+  // }
+
+  /// Present options menu
   stdout.write('1. Hacker News\n2. Generic News\n3. 日本ニュース\n4. 中国新闻\n\n');
 
   int? userChoice = null;
@@ -31,22 +40,34 @@ void main() async {
   if (userChoice == 1) {
     /// Hacker News sources
     clearTerminal();
-    int? storyType = null;
+
     stdout.write('1. Top Stories\n2. New Stories\n3. Ask Stories\n4. Job Stories\n\n');
+
+    int? storyType = null;
     while (storyType == null || (storyType > 4 || storyType < 1)) {
       printMagenta('Choice: ');
       storyType = int.tryParse(stdin.readLineSync()!);
     }
-    int result = await getHackerNews(storyType);
+
+    final int result = await getHackerNews(storyType);
     exit(result);
   } else if (userChoice == 2) {
-    int result = await newsAPI(engSources);
+    /// Generic Western news sources
+    final int result = await newsAPI(engSources, 60);
     exit(result);
   } else if (userChoice == 3) {
-    int result = await newsAPI(jpSources);
+    /// 日本語、朝日新聞などなど
+    final int result = await newsAPI(jpSources, 40);
     exit(result);
   } else if (userChoice == 4) {
-  } else {}
+    /// 中文報紙等等
+    final int result = await newsAPI(zhSources, 40);
+    exit(result);
+  } else {
+    /// it will never get here
+    stdout.write('ERROR: failed to handle user input variable `userChoice`.\n');
+    exit(2);
+  }
 }
 
 Future<int> getHackerNews(int choice) async {
@@ -68,16 +89,22 @@ Future<int> getHackerNews(int choice) async {
     })(),
   );
 
-  Duration timeoutDuration = Duration(seconds: 10);
+  final Duration timeoutDuration = Duration(seconds: 10);
   bool hasTimedOut = false;
 
   List<Story>? stories;
-  Future<List<Story>> storiesFuture = news.getStories();
+  final Future<List<Story>> storiesFuture = news.getStories();
 
   await Future.any([
     storiesFuture.then((List<Story> value) => stories = value) /* success */,
     Future.delayed(timeoutDuration).then((_) => hasTimedOut = true) /* timeout */,
-  ]);
+  ]).catchError((error) {
+    if (error is NewsException) {
+      stdout.write('API ERROR: NewsException: ${error.message}');
+    } else {
+      stdout.write('ERROR: unable to retrieve data due to exception: $error');
+    }
+  });
 
   if (hasTimedOut) {
     stdout.writeln('ERROR: Timeout occurred while fetching news article data.');
@@ -103,20 +130,21 @@ Future<int> getHackerNews(int choice) async {
       continue;
     }
 
-    int daysCounter =
+    final int daysCounter =
         DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(story.time * 1000)).inDays;
 
-    String when = daysCounter == 0
+    final String when = daysCounter == 0
         ? "today"
         : daysCounter == 1
             ? "yesterday"
             : "more than a day ago";
 
-    String title = trim(story.title);
+    final String title = trim(story.title);
 
     stdout.write('#${stories!.indexOf(story) + 1} － ');
 
-    if (techPromoteList.any((e) => story.title.toLowerCase().contains(e.toLowerCase()))) {
+    if (techPromoteList
+        .any((String element) => story.title.toLowerCase().contains(element.toLowerCase()))) {
       printMagenta('$title ');
     } else {
       printCyan('$title ');
@@ -132,21 +160,24 @@ Future<int> getHackerNews(int choice) async {
   return 0;
 }
 
-Future<int> newsAPI(List<Map<String, dynamic>> sources) async {
-  NewsAPI _newsAPI = NewsAPI(newsAPIkey);
-  DateTime now = DateTime.now();
-  Duration oneWeek = Duration(days: 5);
-  DateTime oneWeekAgo = now.subtract(oneWeek);
+Future<int> newsAPI(List<Map<String, dynamic>> sources, int maxLength) async {
+  final NewsAPI _newsAPI = NewsAPI(newsAPIkey);
+  final DateTime now = DateTime.now();
+  final Duration oneWeek = Duration(days: 5);
+  final DateTime oneWeekAgo = now.subtract(oneWeek);
 
-  // Future<List<Source>> _sources = _newsAPI.getSources();
-  // stdout.write(_sources);
+  // List<Source> gotSources = await _newsAPI.getSources();
+  // for (Source src in gotSources) {
+  //   print(src);
+  // }
+  // // SOURCES: https://newsapi.org/v2/sources?x=y&apiKey=34984eeaaece433c812780af807e3dda
 
   List<Article>? articleList;
 
   try {
     /// get general news headlines from prespecified sources
     articleList = await _newsAPI.getTopHeadlines(
-      sources: sources[0]['source'] /* Can't mix with `category:` */,
+      sources: sources[0]['source'] /* Can't mix `sources` with `category:` in same request */,
       pageSize: sources[0]['number'],
       country: sources[0]['country'],
       category: sources[0]['category'],
@@ -160,8 +191,6 @@ Future<int> newsAPI(List<Map<String, dynamic>> sources) async {
       stdout.write('Unexpected error: $e');
     }
   }
-
-  print('here');
 
   /// Get from a specific DOMAIN
   if (articleList != null) {
@@ -196,7 +225,7 @@ Future<int> newsAPI(List<Map<String, dynamic>> sources) async {
       continue;
     }
 
-    String title = trim(art.title!);
+    final String title = trim(art.title!);
 
     stdout.write('#${articleList.indexOf(art) + 1} － ');
 
@@ -210,7 +239,7 @@ Future<int> newsAPI(List<Map<String, dynamic>> sources) async {
       printLightGrey('${art.description}\n');
     }
 
-    String timestamp = DateFormat('yyyy-MM-dd').format(DateTime.parse(art.publishedAt!));
+    final String timestamp = DateFormat('yyyy-MM-dd').format(DateTime.parse(art.publishedAt!));
 
     if (art.author != null) {
       printLightGrey('Published by ${art.author} on $timestamp\n');
@@ -219,17 +248,14 @@ Future<int> newsAPI(List<Map<String, dynamic>> sources) async {
     }
 
     printDarkGrey('${art.url}\n\n');
-
-    // https://newsapi.org/v2/sources?x=y&apiKey=34984eeaaece433c812780af807e3dda
   }
 
   return 0;
 }
 
 void printClickableLink(String text, String url) {
-  /// This is really intended only for my Mac M1 setup
   if (Platform.isWindows) {
-    stdout.write('$text ($url)');
+    printDarkGrey('$text ($url)');
   } else if (Platform.isMacOS) {
     if (Platform.environment['TERM_PROGRAM'] == 'Apple_Terminal') {
       /// Terminal.app with ZSH doesn't support hyperlinks, so just print the URL
@@ -262,18 +288,23 @@ void clearTerminal() {
   }
 }
 
-void briefPause() async {
-  await Future.delayed(Duration(milliseconds: 475));
-}
-
-void moveToPosition(int row, int column) {
-  final positionCode = '\x1B[${row};${column}H';
-  stdout.write(positionCode);
-}
-
 String trim(String title) {
-  String edit = title.length > 60 ? title.substring(0, 57) + "..." : title;
+  int maxLen;
+  if (stdout.hasTerminal) {
+    maxLen = stdout.terminalColumns - 7;
+  } else {
+    maxLen = 60;
+  }
+
+  final String edit = title.length > maxLen ? title.substring(0, (maxLen - 7)) + "..." : title;
   return edit;
+}
+
+void validSites(Map<String, String> sources) {
+  print('Sites you can visit: \n');
+  sources.forEach((name, link) {
+    stdout.write('$name: $link\n');
+  });
 }
 
 void printCyan(String text) => stdout.write(Colorize(text).cyan());
@@ -282,3 +313,14 @@ void printMagenta(String text) => stdout.write(Colorize(text).lightMagenta());
 void printRed(String text) => stdout.write(Colorize(text).red());
 void printDarkGrey(String text) => stdout.write(Colorize(text).darkGray());
 void printLightGrey(String text) => stdout.write(Colorize(text).lightGray());
+
+void briefPause() async {
+  await Future.delayed(Duration(milliseconds: 475));
+}
+
+void moveToPosition(int row, int column) {
+  /// Unless a workaround is found this won't be used; it just pushes the cursor up to the
+  /// 1st position in the terminal, but is buggy due to how a CLRSCRN command adds blank lines
+  final String positionCode = '\x1B[${row};${column}H';
+  stdout.write(positionCode);
+}
