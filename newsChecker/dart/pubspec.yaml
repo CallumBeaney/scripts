@@ -10,6 +10,7 @@ dependencies:
   colorize: any
   intl: ^0.18.1
   ipapi: ^1.0.2
+  web_scraper: ^0.1.4
 
 environment:
   sdk: '^2.19.6'

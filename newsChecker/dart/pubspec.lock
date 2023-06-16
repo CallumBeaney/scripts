@@ -41,6 +41,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  csslib:
+    dependency: transitive
+    description:
+      name: csslib
+      sha256: "706b5707578e0c1b4b7550f64078f0a0f19dec3f50a178ffae7006b0a9ca58fb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -54,6 +62,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.6"
+  html:
+    dependency: transitive
+    description:
+      name: html
+      sha256: "3a7812d5bcd2894edf53dfaf8cd640876cf6cef50a8f238745c8b8120ea74d3a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.15.4"
   http:
     dependency: transitive
     description:
@@ -179,6 +195,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.4"
+  web_scraper:
+    dependency: "direct main"
+    description:
+      name: web_scraper
+      sha256: "34d41de25c1aaeeca2cd91c1d062ee3126f59db6c84ec32da17d44d082ecc177"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.4"
 sdks:
   dart: ">=3.0.0-0 <4.0.0"
   flutter: ">=1.17.0"

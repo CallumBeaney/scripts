@@ -1,27 +1,32 @@
+// Core libs
 import 'dart:async';
 import 'dart:io';
-import 'package:hackernews_api/helper/exception.dart';
 import 'package:intl/intl.dart';
+
+// External libs
+import 'package:news_api_flutter_package/news_api_flutter_package.dart'; // https://pub.dev/packages/news_api_flutter_package
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/model/error.dart';
-import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:hackernews_api/hackernews_api.dart'; // https://pub.dev/packages/hackernews_api
+import 'package:hackernews_api/helper/exception.dart';
+// import 'package:ipapi/ipapi.dart'; // https://pub.dev/packages/ipapi
 import 'package:colorize/colorize.dart';
-// import 'package:ipapi/ipapi.dart'; // This is a litte slow with a VPN on
 
+// Files
 import 'keys.dart';
 
 /// This is essentially my attempt at making my own ultra-minimal old RSS-style terminal news program.
 
-/// TODO: get webpage scraper from pub.dev: https://pub.dev/packages/web_scraper
+/// TODO: integrate webpage scraper: https://pub.dev/packages/web_scraper
 /// TODO: add submenus to 中国語と日本語なの
 
 void main() async {
-  // stdin.echoMode = false;  /// Disable standard input echoing
-  // stdin.lineMode = false;  /// Disable standard input line mode
+  // stdin.echoMode = false; /// For debug
+  // stdin.lineMode = false; /// For debug
 
   clearTerminal();
 
+  /// See `ipapi` package above.
   // final GeoData? currentLocation = await IpApi.getData();
   // if (currentLocation?.countryCode == 'CN') {
   //   validSites(mainlandSources);
@@ -166,30 +171,26 @@ Future<int> newsAPI(List<Map<String, dynamic>> sources, int maxLength) async {
   final Duration oneWeek = Duration(days: 5);
   final DateTime oneWeekAgo = now.subtract(oneWeek);
 
+  /// For debug & updating
   // List<Source> gotSources = await _newsAPI.getSources();
   // for (Source src in gotSources) {
   //   print(src);
   // }
-  // // SOURCES: https://newsapi.org/v2/sources?x=y&apiKey=34984eeaaece433c812780af807e3dda
 
   List<Article>? articleList;
 
   try {
     /// get general news headlines from prespecified sources
     articleList = await _newsAPI.getTopHeadlines(
-      sources: sources[0]['source'] /* Can't mix `sources` with `category:` in same request */,
+      sources: sources[0]['source'] /* Can't mix `sources:` with `category:` in same request */,
       pageSize: sources[0]['number'],
       country: sources[0]['country'],
       category: sources[0]['category'],
-
-      /// TODO: you can do it!
     );
+  } on ApiError catch (e) {
+    stdout.write('API error: ${e.message}');
   } catch (e) {
-    if (e is ApiError) {
-      stdout.write('ERROR: ${e.message}');
-    } else {
-      stdout.write('Unexpected error: $e');
-    }
+    stdout.write('Unexpected error: $e');
   }
 
   /// Get from a specific DOMAIN
@@ -201,19 +202,17 @@ Future<int> newsAPI(List<Map<String, dynamic>> sources, int maxLength) async {
         from: oneWeekAgo,
         to: now,
       );
+    } on ApiError catch (e) {
+      stdout.write('API error: ${e.message}');
     } catch (e) {
-      if (e is ApiError) {
-        stdout.write('ERROR: ${e.message}');
-      } else {
-        stdout.write('Unexpected error: $e');
-      }
+      stdout.write('Unexpected error: $e');
     }
   }
 
   /// After here NewsAPI won't return null; it'll just return an empty List
   if (articleList!.isEmpty) {
     print(
-        'ERROR: Failed to fetch news article data. This may be due to connectivity problems or API gateway issues.');
+        'ERROR: The data request was made successfully, but the source did not return article data. This may be due to connectivity problems or API gateway issues.');
     return 1;
   }
 
@@ -307,14 +306,7 @@ void validSites(Map<String, String> sources) {
   });
 }
 
-void printCyan(String text) => stdout.write(Colorize(text).cyan());
-void printYellow(String text) => stdout.write(Colorize(text).yellow());
-void printMagenta(String text) => stdout.write(Colorize(text).lightMagenta());
-void printRed(String text) => stdout.write(Colorize(text).red());
-void printDarkGrey(String text) => stdout.write(Colorize(text).darkGray());
-void printLightGrey(String text) => stdout.write(Colorize(text).lightGray());
-
-void briefPause() async {
+void briefPause(String url) async {
   await Future.delayed(Duration(milliseconds: 475));
 }
 
@@ -324,3 +316,10 @@ void moveToPosition(int row, int column) {
   final String positionCode = '\x1B[${row};${column}H';
   stdout.write(positionCode);
 }
+
+void printCyan(String text) => stdout.write(Colorize(text).cyan());
+void printYellow(String text) => stdout.write(Colorize(text).yellow());
+void printMagenta(String text) => stdout.write(Colorize(text).lightMagenta());
+void printRed(String text) => stdout.write(Colorize(text).red());
+void printDarkGrey(String text) => stdout.write(Colorize(text).darkGray());
+void printLightGrey(String text) => stdout.write(Colorize(text).lightGray());

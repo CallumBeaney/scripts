@@ -32,6 +32,12 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "csslib",
+      "rootUri": "file:///Users/beaneyc/.pub-cache/hosted/pub.dev/csslib-1.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
+    },
+    {
       "name": "flutter",
       "rootUri": "file:///Users/beaneyc/Developer/flutter/packages/flutter",
       "packageUri": "lib/",
@@ -42,6 +48,12 @@
       "rootUri": "file:///Users/beaneyc/.pub-cache/hosted/pub.dev/hackernews_api-0.0.6",
       "packageUri": "lib/",
       "languageVersion": "2.16"
+    },
+    {
+      "name": "html",
+      "rootUri": "file:///Users/beaneyc/.pub-cache/hosted/pub.dev/html-0.15.4",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
     },
     {
       "name": "http",
@@ -140,13 +152,19 @@
       "languageVersion": "2.14"
     },
     {
+      "name": "web_scraper",
+      "rootUri": "file:///Users/beaneyc/.pub-cache/hosted/pub.dev/web_scraper-0.1.4",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "newsChecker",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "2.19"
     }
   ],
-  "generated": "2023-06-12T16:10:37.509188Z",
+  "generated": "2023-06-16T08:42:32.007286Z",
   "generator": "pub",
   "generatorVersion": "3.0.2"
 }
