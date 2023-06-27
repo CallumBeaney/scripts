@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     }
 
     /* GET TODAY'S DATE */
-    int dateToday[3];
+    int dateToday[3]; // [day, month, year]
     getTodaysDate(dateToday); 
 
     DateInfo info;

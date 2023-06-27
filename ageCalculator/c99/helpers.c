@@ -41,6 +41,8 @@ time_t timeof(int day, int mon, int yr)
 
 void getDifferenceBetweenDates(int *today, int *comparisonDate, DateInfo *info)
 {
+    // This implementation a bit rough; purely needed to get the number of days since a date.
+    // See daysBetweenTwoDates for a more rigorous algorithm.
     time_t presentDate = timeof(today[0], today[1], today[2]);
     time_t pastDate = timeof(comparisonDate[0], comparisonDate[1], comparisonDate[2]);
     time_t daysDifference = (presentDate - pastDate) / (24 * 60 * 60);
