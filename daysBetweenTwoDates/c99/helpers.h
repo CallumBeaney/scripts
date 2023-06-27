@@ -1,6 +1,8 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+#include <time.h>
+
 typedef struct {
     // int AGE_HOURS;
     int days;
