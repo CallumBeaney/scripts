@@ -1,10 +1,11 @@
-<img style="width:500px" src="./pic2.png" /></a>
+<img style="width:500px" src="./pic.png" /></a>
 
   <br>
 Little tools and experiments. 
 
   <br>
 
+- bussy: tells me when the next bus is stopping by my house.  
 - mkcd: `mkcd directoryName` → `*hacker voice* i'm in.`
 - Age Calculator: `howold 01/01/1980` 
 - Clipboard Wordcounter: `howlong` → reads from the clipboard directly and counts the length 
